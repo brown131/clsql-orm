@@ -6,8 +6,7 @@ view-class definitions from the database schema.
 This was originally clsql-postgres-introspect, though this is a bit far removed from that.
 
 I have used this to successfully generate view-classes for PostgreSQL,
-MSSQL (through freetds and unixodbc), and mysql (though with minor
-bugs in mysql).
+MSSQL (through freetds and unixodbc), and MySQL.
 
 This project does not attempt to be a persistence layer. It also makes quite a few assumptions
 about what should be generated and with what types that may not match your desires or existing 
@@ -66,6 +65,9 @@ custom clsql ORM.
   (base-table users))
 
 ```
+
+## Author of MySQL Bug Fixes ##
+Scott Brown <brown131@yahoo.com>
 
 ## Authors of this Branch ##
 

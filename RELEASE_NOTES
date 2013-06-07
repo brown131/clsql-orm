@@ -1,3 +1,6 @@
+v 0.3 - May 2013
+- Fixed bugs with joins and reverse joins for MySQL class generation.
+
 v 0.2 - 3 Sept, 2005
 - Add gen-view-classes-for-database, a macro that lets you easily do everything at compile time
 - Add date type

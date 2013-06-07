@@ -226,6 +226,20 @@ For that matter, if you wish to have custom names and the like, you'd best defin
 (defun list-reverse-join-columns (table &key (schema *schema*))
   (default-list-columns table :schema schema :reverse-joins? t))
 
+(defun where-clause (table &optional (schema *schema*))
+   (if reverse-joins?
+       (case (clsql-sys::database-underlying-type clsql-sys:*default-database*)
+         (:mysql #?"fkey.referenced_table_name = '${table}' and fkey.referenced_table_schema= '${schema}'")
+         (T #?"fkey.table_name = '${table}' and fkey.table_schema= '${schema}'"))
+        #?"cols.table_schema ='${schema}' AND cols.table_name ='${table}'"))
+
+(defun order-clause ()
+   (if reverse-joins?
+       (case (clsql-sys::database-underlying-type clsql-sys:*default-database*)
+         (:mysql #?"fkey.referenced_table_name, fkey.referenced_column_name")
+         (T #?"fkey.table_name, fkey.column_name"))
+       #?"cols.table_name, cols.column_name, cols.data_type"))
+
 (defun default-list-columns ( table &key (schema *schema*) (reverse-joins? nil)
                               &aux where order)
   "Returns a list of
@@ -238,16 +252,12 @@ For that matter, if you wish to have custom names and the like, you'd best defin
 
   (setf table (clsql-sys:sql-escape-quotes (normalize-for-sql table)))
   (setf schema (clsql-sys:sql-escape-quotes (normalize-for-sql schema)))
-  (setf where
-        (if reverse-joins?
-            #?"fkey.table_name = '${table}' and fkey.table_schema= '${schema}'"
-            #?"cols.table_schema ='${schema}' AND cols.table_name ='${table}'"))
-  (setf order
-        (if reverse-joins?
-            #?"fkey.table_name, fkey.column_name"
-            #?"cols.table_name, cols.column_name, cols.data_type"))
+  (setf where (where-clause table schema))
+  (setf order (order-clause))
 
-  (let* ((sql #?"
+  (let* ((sql (case (clsql-sys::database-underlying-type clsql-sys:*default-database*)
+    (:mysql (mysql-sql where order))
+    (T #?"
 SELECT
   cols.table_schema,
   cols.table_name,
@@ -282,7 +292,7 @@ LEFT JOIN information_schema.key_column_usage as fkey
 WHERE ${where}
 
 ORDER BY ${order}
-")
+")))
          (lesser-sql #?"
 SELECT
   DISTINCT 
